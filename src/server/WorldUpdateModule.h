@@ -24,6 +24,20 @@
 #include "../comm/MessageQueue.h"
 #include "../comm/MessageModule.h"
 
+struct Statistics{
+	// logging variables
+	Uint32 ticks;
+	Uint32 p1time;
+	Uint32 p2time;
+	Uint32 p3time;
+	Uint32 totalTime;
+	Uint32 requests;
+	Uint32 players;
+	Uint32 objects;
+	Uint32 regions;
+	Uint32 rounds; // process run rounds;
+	bool quest; // wether quest is ON or OFF
+};
 
 
 class WorldUpdateModule : public Module
@@ -34,15 +48,20 @@ protected:
 	SDL_barrier *barrier;
 	
 	MessageModule* comm;
+	fstream logStream;
+
+	Statistics stats;
+	bool hasQuest;
 	
 public:
 	double avg_wui;			// average_world_update_interval
 	double avg_rui;			// average_regular_update_interval
 
-
 public:
 	/* Constructor and setup methods */
 	WorldUpdateModule( int id, MessageModule *_comm, SDL_barrier *_barr );
+
+	~WorldUpdateModule();
 	
 	/* main loop */
 	void run();
@@ -52,6 +71,9 @@ public:
 	void handleClientLeaveRequest(Player* p);
 
 	void handle_move(Player* p, int _dir);	
+
+	void resetStatistics();
+	void logStatistics();
 };
 
 #endif

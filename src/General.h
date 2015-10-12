@@ -31,11 +31,13 @@ or displayed as warnings
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <iostream>
+#include <fstream>
+
 
 /* Windows headers */
 #ifdef WIN32
 #include <windows.h>
-#include <set>
 #endif
 
 /* SDL headers */

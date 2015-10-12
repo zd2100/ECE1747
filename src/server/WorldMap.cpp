@@ -6,6 +6,14 @@
 void WorldMap::generate()
 {
 	int i, j;
+
+	// build thread-region mapping
+	threadRegions = new std::set<Region*>[sd->num_threads];
+	//for (i = 0; i < sd->num_threads; i++){
+	//	threadRegions[i] = new std::set<Region*>();
+	//}
+
+	
 	Vector2D pos;
 
     /* generate terrain */
@@ -29,8 +37,10 @@ void WorldMap::generate()
 	for( i = 0, pos.x = 0; i < n_regs.x; i++, pos.x += regmin.x )
 	{
 		regions[i] = new Region[ n_regs.y ];
-		for( j = 0, pos.y = 0; j < n_regs.y; j++, pos.y += regmin.y )
-			initRegion( &regions[i][j], pos, regmin, (i*n_regs.y + j)/regions_per_thread, objs, pls);
+		for (j = 0, pos.y = 0; j < n_regs.y; j++, pos.y += regmin.y){
+			initRegion(&regions[i][j], pos, regmin, (i*n_regs.y + j) / regions_per_thread, objs, pls);
+			threadRegions[regions[i][j].layout].insert(&regions[i][j]); // add to thread-region mapping
+		}
 	}
 
 	/* generate objects */
@@ -263,6 +273,13 @@ void WorldMap::reassignRegion( Region* r, int new_layout )
 		players[ new_layout ].insert( *pi );
 	}
 	r->layout = new_layout;
+	threadRegions[new_layout].insert(r);
+}
+
+void WorldMap::reassignRegion(Region* r, int new_layout, int old_layout)
+{
+	threadRegions[old_layout].erase(r);
+	reassignRegion(r, new_layout);
 }
 
 

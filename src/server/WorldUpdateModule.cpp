@@ -35,7 +35,13 @@ WorldUpdateModule::WorldUpdateModule( int id, MessageModule *_comm, SDL_barrier 
 	
 	avg_wui = -1;
 	avg_rui = -1;
-	
+
+	char fileName[256];
+	snprintf(fileName, 256, "log_%s_%d.csv", sd->algorithm_name, id);
+
+	logStream.open(fileName, ios::out | ios::trunc);
+	logStream << "Ticks, P1Time, P2Time, P3Time, TotalTime, Requests, Regions, Players, Rounds, HasQuest" << std::endl;
+
 	assert( SDL_CreateThread( module_thread, (void*)this ) != NULL );
 }
 
@@ -63,15 +69,32 @@ void WorldUpdateModule::run()
     
     Uint32 start_quest = SDL_GetTicks() + sd->quest_between;
     Uint32 end_quest   = start_quest + sd->quest_min + rand() % (sd->quest_max-sd->quest_min+1);
-    	
+	Uint32 time;
+	Uint32 abs_start_time;
+	Uint32 playerCount;
+
 	printf("WorldUpdateModule started\n");
+
+	// init statistics
+	resetStatistics();
+	stats.ticks = SDL_GetTicks();
 
 	/* main loop */
 	while ( true )
 	{
 		start_time = SDL_GetTicks();
 		timeout	= sd->regular_update_interval;
-		
+
+		if (start_time - stats.ticks > 1000){
+			logStatistics();
+			resetStatistics();
+			stats.ticks = start_time;
+		}
+
+		// Log current time
+		time = start_time;
+		abs_start_time = start_time;
+
         while( (m = comm->receive( timeout, t_id )) != NULL )
         {
             addr = m->getAddress();
@@ -103,10 +126,20 @@ void WorldUpdateModule::run()
             delete m;
             timeout = sd->regular_update_interval - (SDL_GetTicks() - start_time);
             if( ((int)timeout) < 0 )	timeout = 0;
+
+			stats.requests++;
         }
+
+		// find time spent on this phase
+		time = SDL_GetTicks() - time;
+		// log P1Time
+		stats.p1time += time;
         
         SDL_WaitBarrier(barrier);
         
+		// reset time for this phase
+		time = SDL_GetTicks();
+
         if( t_id == 0 )
         {
         	sd->wm.balance();
@@ -120,7 +153,9 @@ void WorldUpdateModule::run()
 				sd->quest_pos.x = (rand() % sd->wm.n_regs.x) * CLIENT_MATRIX_SIZE + MAX_CLIENT_VIEW;
 				sd->quest_pos.y = (rand() % sd->wm.n_regs.y) * CLIENT_MATRIX_SIZE + MAX_CLIENT_VIEW;
 				sd->send_start_quest = 1;
-				if( sd->display_quests )		printf("New quest %d,%d\n", sd->quest_pos.x, sd->quest_pos.y);
+				if (sd->display_quests)		{
+					printf("New quest %d,%d\n", sd->quest_pos.x, sd->quest_pos.y);
+				}
 			}			
 			if( start_time > end_quest )
 			{
@@ -130,8 +165,19 @@ void WorldUpdateModule::run()
 				if( sd->display_quests )		printf("Quest over\n");				
 			}
         }
+
+		// find time spent on this phase
+		time = SDL_GetTicks() - time;
+		// log P2Time
+		stats.p2time += time;
+
         
         SDL_WaitBarrier(barrier);
+
+		// reset time for this phase
+		time = SDL_GetTicks();
+
+
         
         wui = SDL_GetTicks() - start_time;
         avg_wui = ( avg_wui < 0 ) ? wui : ( avg_wui * 0.95 + (double)wui * 0.05 );        
@@ -139,6 +185,7 @@ void WorldUpdateModule::run()
         
 		/* send updates to clients (map state) */
 	    bucket->start();
+		playerCount = 0;
 	    while ( ( p = bucket->next() ) != NULL )
 	    {
 	    	ms = new MessageWithSerializator( MESSAGE_SC_REGULAR_UPDATE, t_id, p->address );	assert(ms);
@@ -151,11 +198,33 @@ void WorldUpdateModule::run()
 	    	
 	    	if( sd->send_start_quest )		comm->send( new MessageXY(MESSAGE_SC_NEW_QUEST, t_id, p->address, sd->quest_pos), t_id );
 	    	if( sd->send_end_quest )		comm->send( new Message(MESSAGE_SC_QUEST_OVER, t_id, p->address), t_id );
+			playerCount++;
 	    }
+
+		if (sd->send_start_quest){
+			hasQuest = true;
+		}
+
+		if (sd->send_end_quest){
+			hasQuest = false;
+		}
+
+		// find time spent on this phase
+		time = SDL_GetTicks() - time;
+		// log P3Time
+		stats.p3time += time;
 	
 	    SDL_WaitBarrier(barrier);
 	    rui = SDL_GetTicks() - start_time;    
-	    avg_rui = ( avg_rui < 0 ) ? rui : ( avg_rui * 0.95 + (double)rui * 0.05 );	    
+	    avg_rui = ( avg_rui < 0 ) ? rui : ( avg_rui * 0.95 + (double)rui * 0.05 );	  
+
+		// Log requests processed
+		stats.totalTime += SDL_GetTicks() - abs_start_time;
+		std::set<Region*> regions =sd->wm.threadRegions[t_id];
+		stats.regions = max(stats.regions, regions.size());
+		stats.players = max(stats.players, playerCount);
+		stats.rounds++;
+		stats.quest = hasQuest;
 	}
 }
 
@@ -203,3 +272,18 @@ void WorldUpdateModule::handle_move(Player* p, int _dir)
 	sd->wm.movePlayer( p );
 }
 
+void WorldUpdateModule::resetStatistics(){
+	memset(&stats, 0, sizeof(stats));
+}
+
+void WorldUpdateModule::logStatistics(){
+	logStream << stats.ticks << ", " << stats.p1time << ", " << stats.p2time << ", " << stats.p3time << ", " << stats.totalTime 
+		<< ", " << stats.requests << ", " << stats.regions << ", " << stats.players << ", " << stats.rounds << ", " << stats.quest << std::endl;
+	logStream.flush();
+}
+
+
+WorldUpdateModule::~WorldUpdateModule(){
+	assert(logStream);
+	logStream.close();
+}

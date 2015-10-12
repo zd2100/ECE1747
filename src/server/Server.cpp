@@ -63,9 +63,9 @@ void init(int argc, char *argv[])
 	if ( local_port < 1 )			throw "The port must be an integer larger than 0";
 	printf( "Starting server on port %d\n", local_port );
 	
-	    
-    srand( (unsigned int)time(NULL) );
-    /*
+		
+	srand( (unsigned int)time(NULL) );
+	/*
 	if ( SDL_Init( SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE ) < 0 ) // |SDL_INIT_VIDEO
 	{
 		printf("Could not initialize SDL: %s.\n", SDL_GetError());
@@ -98,7 +98,7 @@ void finish()
 int main(int argc, char *argv[])
 {
 	int i;
-    
+	
 	try
 	{
 		#ifdef __COMPRESSED_MESSAGES__
@@ -108,12 +108,12 @@ int main(int argc, char *argv[])
 		/* initialize */
 		init(argc, argv);
 		printf("Number of Threads @ main: %d\n",  sd->num_threads);
-        
+		
 		/* create server modules */
-       	MessageModule *comm_module = new MessageModule( local_port, sd->num_threads, 0 );	assert( comm_module );
+		MessageModule *comm_module = new MessageModule( local_port, sd->num_threads, 0 );	assert( comm_module );
 		
 		//* WorldUpdateModule
-        SDL_barrier *wu_barrier = SDL_CreateBarrier( sd->num_threads );						assert( wu_barrier ); 
+		SDL_barrier *wu_barrier = SDL_CreateBarrier( sd->num_threads );						assert( wu_barrier ); 
 		WorldUpdateModule **wu_module = new WorldUpdateModule*[ sd->num_threads ];			assert( wu_module );			
 		for ( i = 0; i < sd->num_threads; i++ )
 		{

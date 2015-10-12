@@ -6,6 +6,9 @@
 
 #include "PlayerBucket.h"
 #include "../game/Region.h"
+#include <set>
+#include <list>
+#include <map>
 
 class WorldMap
 {
@@ -16,6 +19,8 @@ public:
     
     Region** regions;
     Vector2D n_regs;
+
+	std::set<Region*> *threadRegions;
     
     /* map and region */
 	Vector2D size;					/* map dimensions */
@@ -25,7 +30,6 @@ public:
 	int blocks;				/* the number of blocked cells from 1000 cells */
 	int resources;			/* the number of resources on the map */
 	int min_res,max_res;	/* the minimun and maximum quantity	a resource can have (min 1, max 10) */
-
 
     Uint32 last_balance;   
     
@@ -50,6 +54,7 @@ public:
 
     bool isOverloaded( int n_pl );
     void reassignRegion( Region* r, int new_layout );
+	void reassignRegion(Region* r, int new_layout, int old_layout);
     
     void regenerateObjects();
     void rewardPlayers( Vector2D quest_pos );
