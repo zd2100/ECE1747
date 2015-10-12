@@ -58,6 +58,10 @@ public:
     
     void regenerateObjects();
     void rewardPlayers( Vector2D quest_pos );
+
+private:
+	Region* findBestMatchRegion(std::set<Region*> regionSet, int size);
+	int findMostPlayerThread(int* threadPlayers, int size);
 };
 
 

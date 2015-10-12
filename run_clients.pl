@@ -3,7 +3,7 @@
 use strict;
 use threads;
 
-my $threads_number = 100;
+my $threads_number = 300;
 my $cmd = './client localhost:1234';
 my @threads;
 

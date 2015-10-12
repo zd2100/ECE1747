@@ -37,7 +37,7 @@ WorldUpdateModule::WorldUpdateModule( int id, MessageModule *_comm, SDL_barrier 
 	avg_rui = -1;
 
 	char fileName[256];
-	snprintf(fileName, 256, "log_%s_%d.csv", sd->algorithm_name, id);
+	snprintf(fileName, 256, "log_%s_%d_%dx%d.csv", sd->algorithm_name, id, sd->wm.regmin.x, sd->wm.regmin.y);
 
 	logStream.open(fileName, ios::out | ios::trunc);
 	logStream << "Ticks, P1Time, P2Time, P3Time, TotalTime, Requests, Regions, Players, Rounds, HasQuest" << std::endl;

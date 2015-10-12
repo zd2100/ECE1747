@@ -9,10 +9,6 @@ void WorldMap::generate()
 
 	// build thread-region mapping
 	threadRegions = new std::set<Region*>[sd->num_threads];
-	//for (i = 0; i < sd->num_threads; i++){
-	//	threadRegions[i] = new std::set<Region*>();
-	//}
-
 	
 	Vector2D pos;
 
@@ -287,8 +283,87 @@ void WorldMap::balance_lightest()
 {
 }
 
+int WorldMap::findMostPlayerThread(int* threadPlayers, int size){
+	int thread = 0;
+	int currentPlayer = 0;
+	for (int i = 0; i < size; i++){
+		if (threadPlayers[i] > currentPlayer){
+			currentPlayer = threadPlayers[i];
+			thread = i;
+		}
+	}
+	return thread;
+}
+
+Region* WorldMap::findBestMatchRegion(std::set<Region*> regionSet, int size){
+	Region * bestMatch = NULL;
+	for (std::set<Region*>::iterator it = regionSet.begin(); it != regionSet.end(); ++it){
+		Region * region = *it;
+		int regionPlayers = region->n_pls;
+		if (regionPlayers > 0 && regionPlayers <= size){
+			if (bestMatch == NULL || bestMatch->n_pls < regionPlayers){
+				bestMatch = region;
+			}
+		}
+	}
+
+	return bestMatch;
+}
+
 void WorldMap::balance_spread()
 {
+	printf("Start Spread Balancing\n");
+	int threadPlayers[sd->num_threads];
+	memset(threadPlayers, 0, sizeof(threadPlayers));
+
+	int totalPlayers = 0;
+	for (int i = 0; i < sd->num_threads; i++){
+		for (std::set<Region*>::iterator it = threadRegions[i].begin(); it != threadRegions[i].end(); ++it){
+			Region* region = *it;
+			threadPlayers[i] += region->n_pls;
+			totalPlayers += region->n_pls;
+		}
+	}
+
+	printf("Total Players: %d\n", totalPlayers);
+	for (int i = 0; i < sd->num_threads; i++){
+		printf("Thread %d: %d \t", i, threadPlayers[i]);
+	}
+	printf("\n");
+
+	int spreadAvg = totalPlayers / sd->num_threads;
+
+	printf("Threshold: %d\n", spreadAvg);
+
+	for (int i = 0; i < sd->num_threads; i++){
+		bool skipFlag = false;
+
+		while (threadPlayers[i] < spreadAvg && !skipFlag){
+			int mostPlayerThread = findMostPlayerThread(threadPlayers, sd->num_threads);
+			printf("Current Thread = %d \t Most Player Thread = %d\n", i, mostPlayerThread);
+
+			// not self
+			if (mostPlayerThread != i){
+				Region * region = findBestMatchRegion(threadRegions[mostPlayerThread], abs(spreadAvg - threadPlayers[i]));
+				if (region != NULL){
+					reassignRegion(region, i, mostPlayerThread);
+					threadPlayers[i] += region->n_pls;
+					threadPlayers[mostPlayerThread] -= region->n_pls;
+
+					printf("[Thread %d] => [Thread %d]\t Region Player = %d", mostPlayerThread, i, region->n_pls);
+				}
+				else{
+					printf("[Thread %d] => [Thread %d]\t No Region Available", mostPlayerThread, i);
+					skipFlag = true;
+				}
+			}
+			else{
+				printf("Most Player Thread is self: Thread %d\n", i);
+			}
+		}
+	}
+
+	printf("Spread Balancing Complete!\n\n");
 }
 
 void WorldMap::balance()
