@@ -36,7 +36,7 @@ int module_thread(void *data)
 	{
 		module->run();
 	} catch ( const char *err ) {
-		printf("[ERROR]%s\n", err);
+	//	printf("[ERROR]%s\n", err);
 		exit(-1);
 	}
 	return 0;
@@ -180,7 +180,7 @@ void init(int argc, char *argv[], ClientData &client_data)
 	*(port_ptr++) = 0;
 	sscanf(port_ptr, "%d", &client_data.server_port);
 	if ( client_data.server_port < 1 ) throw "Port number must be positive";
-	printf("Connecting to server %s:%d\n", client_data.server_name, client_data.server_port);
+	// printf("Connecting to server %s:%d\n", client_data.server_name, client_data.server_port);
 
 	/* use DNS to get server ip address */
 	SDLNet_ResolveHost(&client_data.server_address,

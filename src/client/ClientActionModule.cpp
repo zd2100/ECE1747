@@ -51,7 +51,7 @@ void ClientActionModule::run()
 	Uint32 interval, interval2;
 
 	/* check queues */
-	printf("ClientActionModule started\n");
+	// printf("ClientActionModule started\n");
 
 	/* main loop */
 	time_of_last_message = SDL_GetTicks();
@@ -97,9 +97,9 @@ void ClientActionModule::run()
 				&& client_data->state != MIGRATING )
 			{
 				client_data->state = GONE;
-					printf("Timeout receiving from server ");
-					printAddress(client_data->server_address);
-					printf(" (%d ms)\n", interval);
+//					printf("Timeout receiving from server ");
+//					printAddress(client_data->server_address);
+//					printf(" (%d ms)\n", interval);
 				throw "Server is down";
 			}
 
@@ -202,7 +202,7 @@ void ClientActionModule::action_MIGRATING()
 	Uint32 current_time = SDL_GetTicks();
 	if ( current_time - migration_start_time > client_data->migration_timeout )
 	{
-		printf("Migration timeout (%d ms)\n", current_time - migration_start_time);
+//		printf("Migration timeout (%d ms)\n", current_time - migration_start_time);
 		throw "Player migration is taking too long";
 	}
 }
@@ -217,8 +217,8 @@ void ClientActionModule::handle_OK_JOIN(Message *message)
 /* switch state to PLAYING */
 {
 	MessageOkJoin *m = (MessageOkJoin*)message;
-	printf("Server approved join. Client name '%s' %d (%d,%d)\n", m->name, m->getTarget(), m->x, m->y);
-    printf("%d\n", message->getTarget());
+//	printf("Server approved join. Client name '%s' %d (%d,%d)\n", m->name, m->getTarget(), m->x, m->y);
+//    printf("%d\n", message->getTarget());
 	/* change player state */
 	client_data->state = PLAYING;
 
@@ -278,7 +278,7 @@ void ClientActionModule::handle_NOK_JOIN()
 void ClientActionModule::handle_OK_LEAVE()
 /* terminate */
 {
-	printf("Client is clear to leave\n");
+//	printf("Client is clear to leave\n");
 	client_data->state = GONE;
 	SDL_CondSignal(client_data->term_cond);
 }
@@ -291,13 +291,13 @@ void ClientActionModule::handle_NEW_QUEST(Message *message)
 	client_data->quest_active = true;
 	client_data->questx = m->x;
 	client_data->questy = m->y;
-	printf("New quest %d,%d\n", m->x, m->y);
+//	printf("New quest %d,%d\n", m->x, m->y);
 }
 
 void ClientActionModule::handle_QUEST_OVER()
 /* erase the location of the quest */
 {
-	printf("Quest over\n");
+//	printf("Quest over\n");
 	client_data->quest_active = false;
 }
 

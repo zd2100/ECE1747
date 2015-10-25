@@ -347,7 +347,7 @@ void ClientRenderModule::run()
 {
 	Uint32 start,stop,interval;
 
-	printf("ClientRenderModule started\n");
+//	printf("ClientRenderModule started\n");
 
 	if ( client_data->has_GUI ) initGraphics();
 

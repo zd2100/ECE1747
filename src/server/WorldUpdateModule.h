@@ -37,6 +37,7 @@ struct Statistics{
 	Uint32 regions;
 	Uint32 rounds; // process run rounds;
 	bool quest; // wether quest is ON or OFF
+	Uint32 replys;
 };
 
 

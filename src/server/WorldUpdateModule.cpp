@@ -40,7 +40,7 @@ WorldUpdateModule::WorldUpdateModule( int id, MessageModule *_comm, SDL_barrier 
 	snprintf(fileName, 256, "log_%s_%d_%dx%d.csv", sd->algorithm_name, id, sd->wm.regmin.x, sd->wm.regmin.y);
 
 	logStream.open(fileName, ios::out | ios::trunc);
-	logStream << "Ticks, P1Time, P2Time, P3Time, TotalTime, Requests, Regions, Players, Rounds, HasQuest" << std::endl;
+	logStream << "Ticks, P1Time, P2Time, P3Time, TotalTime, Requests, Regions, Players, Rounds, HasQuest, Replys" << std::endl;
 
 	assert( SDL_CreateThread( module_thread, (void*)this ) != NULL );
 }
@@ -225,6 +225,7 @@ void WorldUpdateModule::run()
 		stats.players = max(stats.players, playerCount);
 		stats.rounds++;
 		stats.quest = hasQuest;
+		stats.replys += playerCount;
 	}
 }
 
@@ -278,7 +279,8 @@ void WorldUpdateModule::resetStatistics(){
 
 void WorldUpdateModule::logStatistics(){
 	logStream << stats.ticks << ", " << stats.p1time << ", " << stats.p2time << ", " << stats.p3time << ", " << stats.totalTime 
-		<< ", " << stats.requests << ", " << stats.regions << ", " << stats.players << ", " << stats.rounds << ", " << stats.quest << std::endl;
+		<< ", " << stats.requests << ", " << stats.regions << ", " << stats.players << ", " << stats.rounds << ", " << stats.quest
+		<< ", " << stats.replys << std::endl;
 	logStream.flush();
 }
 
