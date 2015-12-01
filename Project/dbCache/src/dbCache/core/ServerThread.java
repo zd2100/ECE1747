@@ -5,6 +5,8 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.inject.Inject;
+
 import dbCache.contract.IDispatcher;
 import dbCache.models.Config;
 import dbCache.models.Request;
@@ -17,6 +19,7 @@ public class ServerThread extends Thread{
 	private ServerSocket serverSocket;
 	private final IDispatcher dispatcher;
 
+	@Inject
 	public ServerThread(Config config, IDispatcher dispatcher){
 		this.dispatcher = dispatcher;
 		

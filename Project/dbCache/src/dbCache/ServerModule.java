@@ -10,8 +10,10 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 
+import dbCache.contract.ICacheProvider;
 import dbCache.contract.IDispatcher;
 import dbCache.contract.IQueryParser;
+import dbCache.core.CacheProvider;
 import dbCache.core.QueryParser;
 import dbCache.core.ServerThread;
 import dbCache.core.UnifiedDispatcher;
@@ -25,6 +27,7 @@ public class ServerModule extends AbstractModule {
 		this.bind(ServerThread.class).in(Scopes.SINGLETON);
 		this.bind(IDispatcher.class).to(UnifiedDispatcher.class).in(Scopes.SINGLETON);
 		this.bind(IQueryParser.class).to(QueryParser.class);
+		this.bind(ICacheProvider.class).to(CacheProvider.class).in(Scopes.SINGLETON);
 	}
 	
 	@Provides @Singleton
