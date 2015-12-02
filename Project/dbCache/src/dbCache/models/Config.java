@@ -5,7 +5,8 @@ public class Config {
 	
 	public int port;
 	public int backlog;
-	public int threads;
+	public int minThreads;
+	public int maxThreads;
 	
 	public String dbDriver;
 	public String dbConnection;

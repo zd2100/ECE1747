@@ -22,8 +22,8 @@ public class MySqlDataProvider implements IDataProvider {
 		this.dataSource = new ComboPooledDataSource();
 		this.dataSource.setDriverClass(config.dbDriver);
 		this.dataSource.setJdbcUrl(config.dbConnection);
-		this.dataSource.setMaxPoolSize(config.threads);
-		this.dataSource.setMaxStatements(2 * config.threads);
+		this.dataSource.setMaxPoolSize(config.minThreads);
+		this.dataSource.setMaxStatements(2 * config.minThreads);
 	}
 	
 	public ResultSet executeQuery(String query){

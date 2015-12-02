@@ -7,7 +7,7 @@ import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import dbCache.contract.IDispatcher;
+import dbCache.contract.ITaskDispatcher;
 import dbCache.contract.IQueryParser;
 import dbCache.contract.IRequestHandler;
 import dbCache.models.Config;
@@ -17,12 +17,16 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	
 	private static Logger LOGGER = Logger.getLogger(UnifiedRequestHandler.class.getName());
 	
-	private final IDispatcher dispatcher;
+	private final ITaskDispatcher dispatcher;
 	private final IQueryParser queryParser;
+	private final Thread thread;
+	private boolean running;
 	
-	public UnifiedRequestHandler(Config config, IDispatcher dispatcher, IQueryParser queryParser){
+	public UnifiedRequestHandler(Config config, ITaskDispatcher dispatcher, IQueryParser queryParser){
 		this.dispatcher = dispatcher;
 		this.queryParser = queryParser;
+		this.thread = new Thread(this);
+		this.running = false;
 	}
 
 	@Override
@@ -40,11 +44,22 @@ public class UnifiedRequestHandler implements IRequestHandler {
 				break;
 		}
 	}
+	
+	@Override
+	public void start() {
+		this.running = true;
+		this.thread.start();
+	}
+
+	@Override
+	public void stop() {
+		this.running = false;
+	}
 
 	@Override
 	public void run() {
 		try{
-			while(true){
+			while(this.running){
 				Request request = this.dispatcher.getRequest();
 				System.out.println("Dispatching Request");
 				this.handleRequest(request);
