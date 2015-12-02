@@ -22,7 +22,7 @@ public class UnifiedDispatcher implements IDispatcher {
 	
 	@Inject
 	public UnifiedDispatcher(){
-		this.requestQueue = new LinkedBlockingQueue<Request>();
+		this.requestQueue = new LinkedBlockingQueue<Request>(100);
 		
 		this.readyQueueCount = new AtomicInteger();
 		this.analyzeQueueCount = new AtomicInteger();

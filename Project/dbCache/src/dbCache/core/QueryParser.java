@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import dbCache.contract.IQueryParser;
 import dbCache.models.Request;
+import dbCache.models.RequestStates;
 
 public class QueryParser implements IQueryParser {
 	
@@ -16,6 +17,7 @@ public class QueryParser implements IQueryParser {
 		try {
 			Scanner scanner = new Scanner(request.socket.getInputStream());
 			request.queryHash = scanner.nextLine();
+			request.state = RequestStates.Reply;
 			scanner.close();
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);

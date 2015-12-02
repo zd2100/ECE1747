@@ -4,7 +4,7 @@ import java.net.Socket;
 
 public class Request {
 	public final Socket socket;
-	public final RequestStates state;
+	public RequestStates state;
 	
 	public String queryHash;
 

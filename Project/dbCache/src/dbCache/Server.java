@@ -33,4 +33,10 @@ public class Server {
 	public void stop(){
 		this.serverThread.terminate();
 	}
+	
+	public static void main(String[] args){
+		Server server = new Server();
+		server.start();
+		server.stop();
+	}
 }

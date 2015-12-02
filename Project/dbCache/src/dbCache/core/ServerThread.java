@@ -35,6 +35,9 @@ public class ServerThread extends Thread{
 		try{
 			while(true){
 				Socket socket = this.serverSocket.accept();
+				
+				System.out.println("Connection Accepted");
+				
 				Request request = new Request(socket);
 				this.dispatcher.addRequest(request);
 			}
