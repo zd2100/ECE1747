@@ -42,6 +42,7 @@ public class ServerThread implements Runnable{
 	public void stop(){
 		try{
 			this.running = false;
+			this.thread.interrupt();
 			this.serverSocket.close();
 		}catch(Exception e){
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -60,7 +61,11 @@ public class ServerThread implements Runnable{
 				this.dispatcher.addRequest(request);
 			}
 		}catch(Exception e){
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			if(!this.running && e instanceof InterruptedException){
+				LOGGER.log(Level.INFO, "Server Thread shutdown");
+			}else{
+				LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			}
 		}
 	}
 }

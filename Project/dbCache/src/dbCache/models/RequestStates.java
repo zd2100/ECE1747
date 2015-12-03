@@ -2,7 +2,8 @@ package dbCache.models;
 
 public enum RequestStates {
 	New,
-	Analyze,
+	Executing,
+	DataReady,
 	Reply,
 	Done
 }

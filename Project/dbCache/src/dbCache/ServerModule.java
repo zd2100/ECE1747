@@ -12,10 +12,11 @@ import com.google.inject.Singleton;
 
 import dbCache.contract.ICacheProvider;
 import dbCache.contract.IDataProvider;
-import dbCache.contract.IQueryParser;
+import dbCache.contract.IStatistics;
 import dbCache.core.CacheProvider;
 import dbCache.core.QueryParser;
 import dbCache.core.ServerThread;
+import dbCache.core.Statistics;
 import dbCache.db.MySqlDataProvider;
 import dbCache.models.Config;
 
@@ -25,7 +26,7 @@ public class ServerModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		this.bind(ServerThread.class).in(Scopes.SINGLETON);
-		this.bind(IQueryParser.class).to(QueryParser.class);
+		this.bind(IStatistics.class).to(Statistics.class).in(Scopes.SINGLETON);
 		this.bind(ICacheProvider.class).to(CacheProvider.class).in(Scopes.SINGLETON);
 		this.bind(IDataProvider.class).to(MySqlDataProvider.class).in(Scopes.SINGLETON);
 	}

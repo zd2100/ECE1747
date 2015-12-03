@@ -1,45 +1,51 @@
 package dbCache.core.unified;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.inject.Inject;
+
 import dbCache.contract.ITaskDispatcher;
-import dbCache.contract.IQueryParser;
+import dbCache.core.JsonWriter;
+import dbCache.core.QueryParser;
+import dbCache.contract.ICacheProvider;
 import dbCache.contract.IRequestHandler;
 import dbCache.models.Config;
 import dbCache.models.Request;
+import dbCache.models.RequestStates;
 
 public class UnifiedRequestHandler implements IRequestHandler {
 	
 	private static Logger LOGGER = Logger.getLogger(UnifiedRequestHandler.class.getName());
 	
 	private final ITaskDispatcher dispatcher;
-	private final IQueryParser queryParser;
+	private final ICacheProvider cacheProvider;
+
 	private final Thread thread;
 	private boolean running;
 	
-	public UnifiedRequestHandler(Config config, ITaskDispatcher dispatcher, IQueryParser queryParser){
+	@Inject
+	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider){
 		this.dispatcher = dispatcher;
-		this.queryParser = queryParser;
+		this.cacheProvider = cacheProvider;
 		this.thread = new Thread(this);
 		this.running = false;
 	}
 
 	@Override
-	public void handleRequest(Request request) {
+	public void handleRequest(Request request) throws Exception {
 		switch(request.state){
 			case New:
 				this.handleNewRequest(request);
 				break;
-			case Analyze:
+			case Executing:
+				this.handeExecuting(request);
 				break;
 			case Reply:
 				this.handleReply(request);
 				break;
+			case Done:
+				this.handleDone(request);
 			default:
 				break;
 		}
@@ -54,40 +60,54 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	@Override
 	public void stop() {
 		this.running = false;
+		this.thread.interrupt();
 	}
-
+	
+	@Override
+	public boolean isRunning() {
+		return this.running && this.thread.isAlive();
+	}
+	
 	@Override
 	public void run() {
 		try{
 			while(this.running){
 				Request request = this.dispatcher.getRequest();
-				System.out.println("Dispatching Request");
 				this.handleRequest(request);
 			}
 		}catch(Exception e){
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			if(!this.running && e instanceof InterruptedException){
+				LOGGER.log(Level.INFO, "Request Handler shutdown");
+			}else{
+				LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			}
 		}
 	}
 	
 	private void handleNewRequest(Request request){
-		this.queryParser.parseQuery(request);
+		QueryParser.parseQuery(request);
+		request.state = RequestStates.Reply;
 		this.dispatcher.addRequest(request);
 	}
 	
+	private void handeExecuting(Request request){
+		if(this.cacheProvider.executeQuery(request)){
+			request.state = RequestStates.Reply;
+			this.dispatcher.addRequest(request);
+		}
+	}
+	
 	private void handleReply(Request request){
-		String text = new String();
-		for(int i = 0 ; i < request.queryHash.length(); i ++){
-			text += request.queryHash.charAt(request.queryHash.length() - i);
-		}
-		
-		try {
-			 OutputStream output = request.socket.getOutputStream();
-			 PrintWriter writer = new PrintWriter(output);
-			 writer.println(text);
-			 
-			 request.socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		JsonWriter.writeResponse(request);
+		request.state = RequestStates.Done;
+		this.dispatcher.addRequest(request);
+	}
+
+	private void handleDone(Request request) throws Exception{
+		// close socket and all reader/writer
+		request.socket.close();
+			
+		// TODO: analyze statistics 
+
 	}
 }

@@ -8,20 +8,19 @@ import java.util.logging.Logger;
 import com.google.inject.Inject;
 
 import dbCache.contract.ITaskDispatcher;
-import dbCache.contract.IStatistics;
-import dbCache.contract.ITaskDispatcher;
+import dbCache.core.Statistics;
 import dbCache.models.Request;
 
 public class UnifiedTaskDispatcher implements ITaskDispatcher {
 	
 	private static Logger LOGGER = Logger.getLogger(UnifiedTaskDispatcher.class.getName());
 	
-	private final IStatistics statistics;
+	private final Statistics statistics;
 	public final BlockingQueue<Request> requestQueue;
 	
 	
 	@Inject
-	public UnifiedTaskDispatcher(IStatistics statistics){
+	public UnifiedTaskDispatcher(Statistics statistics){
 		this.statistics = statistics;
 		this.requestQueue = new LinkedBlockingQueue<Request>(100);
 	}
