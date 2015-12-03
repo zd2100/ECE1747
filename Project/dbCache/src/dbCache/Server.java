@@ -15,7 +15,7 @@ public class Server {
 	private final IScheduler scheduler;
 	
 	public Server(){
-		this.injector = Guice.createInjector(new ServerModule());
+		this.injector = Guice.createInjector(new ServerModule(), new UnifiedModule());
 		this.serverThread = this.injector.getInstance(ServerThread.class);
 		this.scheduler = this.injector.getInstance(IScheduler.class);
 	}
@@ -37,7 +37,7 @@ public class Server {
 		
 		while(true){
 			String cmd = console.nextLine();
-			if(cmd.equals("quit")){
+			if(cmd.equals("quit") || cmd.equals("exit")){
 				server.stop();
 				break;
 			};
