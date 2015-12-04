@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import dbCache.contract.ITaskDispatcher;
 import dbCache.core.JsonReplyWriter;
 import dbCache.core.QueryParser;
+import dbCache.core.RequestHandlingReporter;
 import dbCache.contract.ICacheProvider;
 import dbCache.contract.IRequestHandler;
 import dbCache.models.Request;
@@ -19,14 +20,15 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	
 	private final ITaskDispatcher dispatcher;
 	private final ICacheProvider cacheProvider;
-
+	private final RequestHandlingReporter reporter;
 	private final Thread thread;
 	private boolean running;
 	
 	@Inject
-	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider){
+	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider, RequestHandlingReporter reporter){
 		this.dispatcher = dispatcher;
 		this.cacheProvider = cacheProvider;
+		this.reporter = reporter;
 		this.thread = new Thread(this);
 		this.running = false;
 	}
@@ -84,29 +86,36 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	}
 	
 	private void handleNewRequest(Request request){
+		request.processStartTime = System.currentTimeMillis();
 		QueryParser.parseQuery(request);
 		request.state = RequestStates.Executing;
 		this.dispatcher.addRequest(request);
+		request.processEndTime = System.currentTimeMillis();
 	}
 	
 	private void handeExecuting(Request request){
+		request.executeStartTime = System.currentTimeMillis();
 		if(this.cacheProvider.executeQuery(request)){
 			request.state = RequestStates.Reply;
 			this.dispatcher.addRequest(request);
 		}
+		request.executeEndTime = System.currentTimeMillis();
 	}
 	
 	private void handleReply(Request request){
+		request.responseStartTime = System.currentTimeMillis();
 		JsonReplyWriter.writeResponse(request);
 		request.state = RequestStates.Done;
 		this.dispatcher.addRequest(request);
+		request.responseEndTime = System.currentTimeMillis();
 	}
 
 	private void handleDone(Request request) throws Exception{
 		// close socket and all reader/writer
 		request.socket.close();
-			
-		// TODO: analyze statistics 
+		request.requestTerminateTime = System.currentTimeMillis();
+		
 		System.out.println("Close Request: [" + request.hashCode() + "]");
+		this.reporter.LogRequest(request);
 	}
 }

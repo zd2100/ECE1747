@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 
 import dbCache.contract.IRequestHandler;
 import dbCache.contract.IScheduler;
+import dbCache.core.Statistics;
 import dbCache.models.Config;
 
 public class FixedScheduler implements IScheduler {
@@ -20,7 +21,7 @@ public class FixedScheduler implements IScheduler {
 	private final Config config;
 	private final Injector injector;
 	private final List<IRequestHandler> handlerPool;
-	
+
 	private boolean running;
 	
 	@Inject
@@ -61,8 +62,6 @@ public class FixedScheduler implements IScheduler {
 	}
 
 	private void balance(){
-		System.out.println("Balancing");
-		
 		// remove dead handlers
 		Iterator<IRequestHandler> iterator = this.handlerPool.iterator();
 		while(iterator.hasNext()){

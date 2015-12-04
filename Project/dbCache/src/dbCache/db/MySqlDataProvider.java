@@ -11,6 +11,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import dbCache.contract.IDataProvider;
 import dbCache.models.Config;
+import dbCache.models.DataSet;
 
 public class MySqlDataProvider implements IDataProvider {
 	private static final Logger LOGGER = Logger.getLogger(MySqlDataProvider.class.getName());
@@ -26,10 +27,11 @@ public class MySqlDataProvider implements IDataProvider {
 		this.dataSource.setMaxStatements(2 * config.minThreads);
 	}
 	
-	public ResultSet executeQuery(String query){
+	public DataSet executeQuery(String query){
 		try(Connection con = this.getConnection()){
 			PreparedStatement statement = con.prepareStatement(query);
-			statement.executeQuery();
+			ResultSet result = statement.executeQuery();
+			return new DataSet(result);
 		}catch(Exception e){
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}

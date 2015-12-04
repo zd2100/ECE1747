@@ -1,7 +1,7 @@
 package dbCache.contract;
 
-import java.sql.ResultSet;
+import dbCache.models.DataSet;
 
 public interface IDataProvider {
-	public ResultSet executeQuery(String query);
+	public DataSet executeQuery(String query);
 }

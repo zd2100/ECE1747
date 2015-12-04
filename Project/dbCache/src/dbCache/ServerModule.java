@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import dbCache.contract.ICacheProvider;
 import dbCache.contract.IDataProvider;
 import dbCache.core.CacheProvider;
+import dbCache.core.RequestHandlingReporter;
 import dbCache.core.ServerThread;
 import dbCache.core.Statistics;
 import dbCache.db.MySqlDataProvider;
@@ -27,6 +28,7 @@ public class ServerModule extends AbstractModule {
 		this.bind(Statistics.class).in(Scopes.SINGLETON);
 		this.bind(ICacheProvider.class).to(CacheProvider.class).in(Scopes.SINGLETON);
 		this.bind(IDataProvider.class).to(MySqlDataProvider.class).in(Scopes.SINGLETON);
+		this.bind(RequestHandlingReporter.class).in(Scopes.SINGLETON);
 	}
 	
 	@Provides @Singleton

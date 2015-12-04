@@ -17,8 +17,8 @@ public class QueryParser {
 	public static void parseQuery(Request request){
 		try {
 			BufferedReader  reader = new BufferedReader(new InputStreamReader(request.socket.getInputStream()));
-			request.queryHash = reader.readLine();
-			System.out.println("Request[" + request.hashCode() + "] => [" + request.queryHash + "]");
+			request.query = reader.readLine();
+			System.out.println("Request[" + request.hashCode() + "] => [" + request.query + "]");
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}

@@ -18,6 +18,7 @@ import dbCache.contract.IDataProvider;
 import dbCache.contract.ITaskDispatcher;
 import dbCache.models.CacheItem;
 import dbCache.models.Config;
+import dbCache.models.DataSet;
 import dbCache.models.Request;
 import dbCache.models.RequestStates;
 
@@ -48,7 +49,7 @@ public class CacheProvider implements ICacheProvider {
 
 	@Override
 	public boolean executeQuery(Request request) {
-		String key = request.queryHash;
+		String key = request.query;
 		
 		// Cache Hit
 		this.lock.readLock().lock();
@@ -75,7 +76,7 @@ public class CacheProvider implements ICacheProvider {
 		this.waitingList.put(key, new HashSet<Request>());
 		
 		// Fetch data from database
-		ResultSet data = this.dataProvider.executeQuery(key);
+		DataSet data = this.dataProvider.executeQuery(key);
 		CacheItem item = this.updateCache(key, data);
 		
 		request.data = item.getData();
@@ -99,10 +100,10 @@ public class CacheProvider implements ICacheProvider {
 			}
 		}
 		
-		return false;
+		return true;
 	}
 	
-	private CacheItem updateCache(String key, ResultSet data){
+	private CacheItem updateCache(String key, DataSet data){
 		CacheItem item = new CacheItem(key, data);
 		
 		this.lock.writeLock().lock();
