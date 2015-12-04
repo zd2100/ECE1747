@@ -6,11 +6,10 @@ import java.util.logging.Logger;
 import com.google.inject.Inject;
 
 import dbCache.contract.ITaskDispatcher;
-import dbCache.core.JsonWriter;
+import dbCache.core.JsonReplyWriter;
 import dbCache.core.QueryParser;
 import dbCache.contract.ICacheProvider;
 import dbCache.contract.IRequestHandler;
-import dbCache.models.Config;
 import dbCache.models.Request;
 import dbCache.models.RequestStates;
 
@@ -86,7 +85,7 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	
 	private void handleNewRequest(Request request){
 		QueryParser.parseQuery(request);
-		request.state = RequestStates.Reply;
+		request.state = RequestStates.Executing;
 		this.dispatcher.addRequest(request);
 	}
 	
@@ -98,7 +97,7 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	}
 	
 	private void handleReply(Request request){
-		JsonWriter.writeResponse(request);
+		JsonReplyWriter.writeResponse(request);
 		request.state = RequestStates.Done;
 		this.dispatcher.addRequest(request);
 	}
@@ -108,6 +107,6 @@ public class UnifiedRequestHandler implements IRequestHandler {
 		request.socket.close();
 			
 		// TODO: analyze statistics 
-
+		System.out.println("Close Request: [" + request.hashCode() + "]");
 	}
 }

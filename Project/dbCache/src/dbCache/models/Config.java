@@ -10,4 +10,6 @@ public class Config {
 	
 	public String dbDriver;
 	public String dbConnection;
+	
+	public int cacheSize;
 }

@@ -6,9 +6,9 @@ import java.sql.ResultSet;
 public class Request {
 	public final Socket socket;
 	public RequestStates state;
-	public ResultSet data;
 	
 	public String queryHash;
+	public ResultSet data;
 
 	public Request(Socket socket){
 		this.socket = socket;
