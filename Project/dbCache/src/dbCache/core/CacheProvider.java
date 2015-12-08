@@ -58,7 +58,7 @@ public class CacheProvider implements ICacheProvider {
 			if(this.dataMap.containsKey(key)){
 				request.data = this.dataMap.get(key).getData();
 				this.statistics.cacheHitCount.incrementAndGet();
-				System.out.println("Cache hit");
+		//		System.out.println("Cache hit");
 				return true;
 			}
 		}finally{
@@ -66,12 +66,13 @@ public class CacheProvider implements ICacheProvider {
 		}
 		
 		// Not in cache, but is loading by other thread
-		if(this.waitingList.containsKey(key)){
-			synchronized(this.waitingList){
+		synchronized(this.waitingList){
+			if(this.waitingList.containsKey(key)){
+				request.waitListStartTime = System.currentTimeMillis();
 				this.waitingList.get(key).add(request);
-				System.out.println("Add to waiting list: [" + request.hashCode() + "]");
+		//		System.out.println("Add to waiting list: [" + request.hashCode() + "]");
+				return false;
 			}
-			return false;
 		}
 		
 		this.waitingList.put(key, new HashSet<Request>());
@@ -85,18 +86,20 @@ public class CacheProvider implements ICacheProvider {
 		
 		// wake up all requests with same query
 		if(this.waitingList.containsKey(key)){
-			Set<Request> waitingSet = this.waitingList.get(key);
-			Iterator<Request> iterator = waitingSet.iterator();
-			while(iterator.hasNext()){
+			synchronized(this.waitingList){
+				Set<Request> waitingSet = this.waitingList.get(key);
+				Iterator<Request> iterator = waitingSet.iterator();
+				while(iterator.hasNext()){
 				Request waitRequest = iterator.next();
 				waitRequest.data = item.getData();
 				waitRequest.state = RequestStates.Reply;
 				this.statistics.delayedCacheHitCount.incrementAndGet();
+				waitRequest.waitListEndTime = System.currentTimeMillis();
 				this.dispatcher.addRequest(waitRequest);
-				System.out.println("Waking up request: [" + request.hashCode() + "]");
+		//		System.out.println("Waking up request: [" + request.hashCode() + "]");
 			}
 			
-			synchronized(this.waitingList){
+			
 				this.waitingList.remove(key);
 			}
 		}
@@ -114,7 +117,7 @@ public class CacheProvider implements ICacheProvider {
 				if(this.dataMap.size() <= this.config.cacheSize){
 					this.dataMap.put(key, item);
 					this.cacheOrder.add(item);
-					System.out.println("Cache Add: [" + item.key + "]");
+		//			System.out.println("Cache Add: [" + item.key + "]");
 				}else{
 					// sort items to find minimum CacheItem
 					this.cacheOrder.sort(CacheItem.comparator);
@@ -129,7 +132,7 @@ public class CacheProvider implements ICacheProvider {
 					this.cacheOrder.add(item);
 					
 					this.statistics.cacheTurnoverCount.incrementAndGet();
-					System.out.println("Cache Turnover: [" + dropItem.key + "][" + dropItem.count.get() + "] => [" + item.key + "]");
+		//			System.out.println("Cache Turnover: [" + dropItem.key + "][" + dropItem.count.get() + "] => [" + item.key + "]");
 				}
 			}
 		}finally{

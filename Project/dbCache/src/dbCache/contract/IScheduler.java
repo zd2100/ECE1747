@@ -1,6 +1,6 @@
 package dbCache.contract;
 
-public interface IScheduler extends Runnable {
+public interface IScheduler{
 	public void start();
 	public void stop();
 }

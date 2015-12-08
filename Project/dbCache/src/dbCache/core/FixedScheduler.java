@@ -3,6 +3,8 @@ package dbCache.core;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,10 +16,10 @@ import dbCache.contract.IScheduler;
 import dbCache.models.Config;
 import dbCache.stats.Statistics;
 
-public class FixedScheduler implements IScheduler {
+public class FixedScheduler extends TimerTask implements IScheduler {
 	private static Logger LOGGER = Logger.getLogger(FixedScheduler.class.getName());
 	
-	private final Thread thread;
+	private final Timer timer;
 	private final Config config;
 	private final Injector injector;
 	private final List<IRequestHandler> handlerPool;
@@ -29,36 +31,25 @@ public class FixedScheduler implements IScheduler {
 		this.config = config;
 		this.injector = injector;
 		this.running = false;
-		this.thread = new Thread(this);
+		this.timer = new Timer();
 		this.handlerPool = new ArrayList<IRequestHandler>();
 	}
 	
 	@Override
 	public void start() {
 		this.running = true;
-		this.thread.start();
+		this.timer.schedule(this, 0, 5000);
 	}
 
 	@Override
 	public void stop() {
 		this.running = false;
-		this.thread.interrupt();
+		this.timer.cancel();
 	}
 
 	@Override
 	public void run() {
-		try{
-			while(this.running){
-				this.balance();
-				Thread.sleep(5000);
-			}
-		}catch(Exception e){
-			if(!this.running && e instanceof InterruptedException){
-				LOGGER.log(Level.INFO, "FixedSchedular shutdown");
-			}else{
-				LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			}
-		}
+		this.balance();
 	}
 
 	private void balance(){
@@ -72,8 +63,8 @@ public class FixedScheduler implements IScheduler {
 		}
 		
 		// create new handler if necessary
-		if(this.handlerPool.size() < this.config.minThreads){
-			for(int i=0; i < this.config.minThreads - this.handlerPool.size(); i++){
+		if(this.handlerPool.size() < this.config.maxThreads/2){
+			for(int i=0; i < this.config.maxThreads/2 - this.handlerPool.size(); i++){
 				IRequestHandler handler = this.injector.getInstance(IRequestHandler.class);
 				handler.start();
 				this.handlerPool.add(handler);

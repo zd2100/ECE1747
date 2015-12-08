@@ -11,6 +11,7 @@ import dbCache.contract.IRequestHandler;
 import dbCache.models.Request;
 import dbCache.models.RequestStates;
 import dbCache.stats.RequestReporter;
+import dbCache.stats.Statistics;
 
 public class UnifiedRequestHandler implements IRequestHandler {
 	
@@ -20,11 +21,13 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	private final ICacheProvider cacheProvider;
 	private final RequestReporter reporter;
 	private final Thread thread;
+	private final Statistics statistics;
 	private boolean running;
 	private boolean waiting;
 	
 	@Inject
-	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider, RequestReporter reporter){
+	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider, Statistics statistics, RequestReporter reporter){
+		this.statistics = statistics;
 		this.dispatcher = dispatcher;
 		this.cacheProvider = cacheProvider;
 		this.reporter = reporter;
@@ -33,21 +36,25 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	}
 
 	@Override
-	public void handleRequest(Request request) throws Exception {
-		switch(request.state){
-			case New:
-				this.handleNewRequest(request);
-				break;
-			case Executing:
-				this.handeExecuting(request);
-				break;
-			case Reply:
-				this.handleReply(request);
-				break;
-			case Done:
-				this.handleDone(request);
-			default:
-				break;
+	public void handleRequest(Request request){
+		try{
+			switch(request.state){
+				case New:
+					this.handleNewRequest(request);
+					break;
+				case Executing:
+					this.handeExecuting(request);
+					break;
+				case Reply:
+					this.handleReply(request);
+					break;
+				case Done:
+					this.handleDone(request);
+				default:
+					break;
+			}
+		}catch(Exception e){
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 	
@@ -72,20 +79,17 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	
 	@Override
 	public void run() {
-		try{
-			while(this.running){
+		Request request = null;
+		while(this.running){
+			try{
 				this.waiting = true;
-				System.out.println("Wait Request");
-				Request request = this.dispatcher.getRequest();
+				request = this.dispatcher.getRequest();
 				this.waiting = false;
-				this.handleRequest(request);
-			}
-		}catch(Exception e){
-			if(this.running){
-				LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			}catch(InterruptedException e){
+			}finally{
+				if (request != null) this.handleRequest(request);
 			}
 		}
-		
 		LOGGER.log(Level.INFO, "Request Handler shutdown");
 	}
 	
@@ -118,8 +122,9 @@ public class UnifiedRequestHandler implements IRequestHandler {
 		// close socket and all reader/writer
 		request.socket.close();
 		request.requestTerminateTime = System.currentTimeMillis();
+		this.statistics.doneRequestCount.incrementAndGet();
 		
-		System.out.println("Close Request: [" + request.hashCode() + "]");
+	//	System.out.println("Close Request: [" + request.hashCode() + "]");
 		this.reporter.LogRequest(request);
 	}
 }

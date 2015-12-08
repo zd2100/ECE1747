@@ -13,6 +13,8 @@ public class Statistics {
 	public final AtomicLong delayedCacheHitCount;
 	public final AtomicLong cacheTurnoverCount;
 	public final AtomicInteger handlerCount;
+	public final AtomicInteger newRequestCount;
+	public final AtomicInteger doneRequestCount;
 
 	public Statistics(){
 		this.requestQueueCount = new AtomicInteger();
@@ -24,5 +26,7 @@ public class Statistics {
 		this.delayedCacheHitCount = new AtomicLong();
 		this.cacheTurnoverCount = new AtomicLong();
 		this.handlerCount = new AtomicInteger();
+		this.newRequestCount = new AtomicInteger();
+		this.doneRequestCount = new AtomicInteger();
 	}
 }

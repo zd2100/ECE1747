@@ -34,7 +34,10 @@ public class ServerStatusReporter extends TimerTask {
 	@Override
 	public void run() {
 		if(this.writer != null){
-			this.writer.println(this.statistics.requestQueueCount.get() + "," +
+			this.writer.println(
+					this.statistics.newRequestCount.get() + "," +
+					this.statistics.doneRequestCount.get() + "," +
+					this.statistics.requestQueueCount.get() + "," +
 					this.statistics.executeQueueCount.get() + "," + 
 					this.statistics.replyQueueCount.get() + "," + 
 					this.statistics.doneQueueCount.get() + "," +
@@ -44,6 +47,8 @@ public class ServerStatusReporter extends TimerTask {
 					this.statistics.delayedCacheHitCount.get() + "," + 
 					this.statistics.cacheTurnoverCount.get());
 			this.writer.flush();
+			this.statistics.newRequestCount.set(0);
+			this.statistics.doneRequestCount.set(0);
 		}
 	}
 }

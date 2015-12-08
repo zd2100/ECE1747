@@ -59,25 +59,19 @@ public class UnifiedTaskDispatcher implements ITaskDispatcher {
 		}
 	}
 	
-	public Request getRequest(){
-		try{
-			BlockingQueue<Request> queue = this.getMaxQueue();
-			Request request = queue.take();
-			if(queue == this.requestQueue){
-				this.statistics.requestQueueCount.decrementAndGet();
-			}else if(queue == this.executeQueue){
-				this.statistics.executeQueueCount.decrementAndGet();
-			}else if(queue == this.responseQueue){
-				this.statistics.replyQueueCount.decrementAndGet();
-			}else if(queue == this.doneQueue){
-				this.statistics.doneQueueCount.decrementAndGet();
-			}
-			return request;
-		}catch(Exception e){
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+	public synchronized Request getRequest() throws InterruptedException{
+		BlockingQueue<Request> queue = this.getMaxQueue();
+		Request request = queue.take();
+		if(queue == this.requestQueue){
+			this.statistics.requestQueueCount.decrementAndGet();
+		}else if(queue == this.executeQueue){
+			this.statistics.executeQueueCount.decrementAndGet();
+		}else if(queue == this.responseQueue){
+			this.statistics.replyQueueCount.decrementAndGet();
+		}else if(queue == this.doneQueue){
+			this.statistics.doneQueueCount.decrementAndGet();
 		}
-		
-		return null;
+		return request;
 	}
 	
 	private BlockingQueue<Request> getMaxQueue(){

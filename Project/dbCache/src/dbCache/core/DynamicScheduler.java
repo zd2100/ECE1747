@@ -3,6 +3,8 @@ package dbCache.core;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,10 +16,10 @@ import dbCache.contract.IScheduler;
 import dbCache.models.Config;
 import dbCache.stats.Statistics;
 
-public class DynamicScheduler implements IScheduler {
+public class DynamicScheduler extends TimerTask implements IScheduler {
 	private static Logger LOGGER = Logger.getLogger(DynamicScheduler.class.getName());
 
-	private final Thread thread;
+	private final Timer timer;
 	private final Config config;
 	private final Injector injector;
 	private final List<IRequestHandler> handlerPool;
@@ -30,34 +32,25 @@ public class DynamicScheduler implements IScheduler {
 		this.injector = injector;
 		this.statistics = statistics;
 		this.handlerPool = new ArrayList<IRequestHandler>();
-		this.thread = new Thread(this);
+		this.timer = new Timer();
 		this.running = false;
 	}
 	
 	@Override
 	public void run() {
-		try{
-			this.balance();
-			Thread.sleep(5000);
-		}catch(Exception e){
-			if(!this.running && e instanceof InterruptedException){
-				LOGGER.log(Level.INFO, "Dynamic Schedular shut down");
-			}else{
-				LOGGER.log(Level.INFO, e.getMessage(), e);
-			}
-		}
+		this.balance();
 	}
 
 	@Override
 	public void start() {
 		this.running = true;
-		this.thread.start();
+		this.timer.scheduleAtFixedRate(this, 0, 5000);
 	}
 
 	@Override
 	public void stop() {
 		this.running = false;
-		this.thread.interrupt();
+		this.timer.cancel();
 	}
 
 	private void balance(){
@@ -66,6 +59,8 @@ public class DynamicScheduler implements IScheduler {
 		// calculate how many threads to add/remove
 		double ratio = this.calcRequestHandlerRatio();
 		int adjustment = 0;
+		
+		System.out.println("Ratio = " + ratio);
 		
 		// too many requests
 		if(ratio > this.config.loadFactor){
@@ -85,7 +80,7 @@ public class DynamicScheduler implements IScheduler {
 				IRequestHandler handler = this.injector.getInstance(IRequestHandler.class);
 				handler.start();
 				this.handlerPool.add(handler);
-				System.out.println("Starting handler");
+		//		System.out.println("Starting handler");
 			}
 		}else if(adjustment < 0){
 			// remove dead handlers
@@ -94,7 +89,7 @@ public class DynamicScheduler implements IScheduler {
 			while(iterator.hasNext()){
 				IRequestHandler handler = iterator.next();
 				if(!handler.isRunning() || count < Math.abs(adjustment)){
-					System.out.println("Removing Handler");
+		//			System.out.println("Removing Handler");
 					handler.stop();
 					iterator.remove();
 					count++;
