@@ -17,6 +17,7 @@ import dbCache.core.ServerThread;
 import dbCache.db.MySqlDataProvider;
 import dbCache.models.Config;
 import dbCache.stats.RequestReporter;
+import dbCache.stats.ServerStatusReporter;
 import dbCache.stats.Statistics;
 
 public class ServerModule extends AbstractModule {
@@ -29,6 +30,7 @@ public class ServerModule extends AbstractModule {
 		this.bind(ICacheProvider.class).to(CacheProvider.class).in(Scopes.SINGLETON);
 		this.bind(IDataProvider.class).to(MySqlDataProvider.class).in(Scopes.SINGLETON);
 		this.bind(RequestReporter.class).in(Scopes.SINGLETON);
+		this.bind(ServerStatusReporter.class).in(Scopes.SINGLETON);
 	}
 	
 	@Provides @Singleton
