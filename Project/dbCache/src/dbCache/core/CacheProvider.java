@@ -21,6 +21,7 @@ import dbCache.models.Config;
 import dbCache.models.DataSet;
 import dbCache.models.Request;
 import dbCache.models.RequestStates;
+import dbCache.stats.Statistics;
 
 public class CacheProvider implements ICacheProvider {
 	

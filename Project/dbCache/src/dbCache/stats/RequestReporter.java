@@ -1,4 +1,4 @@
-package dbCache.core;
+package dbCache.stats;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,11 +6,11 @@ import java.io.PrintWriter;
 
 import dbCache.models.Request;
 
-public class RequestHandlingReporter {
+public class RequestReporter {
 	public static String reportFile = "RequestReport.csv";
 	public final PrintWriter writer;
 	
-	public RequestHandlingReporter() throws IOException{
+	public RequestReporter() throws IOException{
 		this.writer = new PrintWriter(new File(reportFile));
 	}
 	

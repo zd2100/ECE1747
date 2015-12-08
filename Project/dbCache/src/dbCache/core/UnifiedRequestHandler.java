@@ -1,4 +1,4 @@
-package dbCache.core.unified;
+package dbCache.core;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -6,13 +6,11 @@ import java.util.logging.Logger;
 import com.google.inject.Inject;
 
 import dbCache.contract.ITaskDispatcher;
-import dbCache.core.JsonReplyWriter;
-import dbCache.core.QueryParser;
-import dbCache.core.RequestHandlingReporter;
 import dbCache.contract.ICacheProvider;
 import dbCache.contract.IRequestHandler;
 import dbCache.models.Request;
 import dbCache.models.RequestStates;
+import dbCache.stats.RequestReporter;
 
 public class UnifiedRequestHandler implements IRequestHandler {
 	
@@ -20,12 +18,13 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	
 	private final ITaskDispatcher dispatcher;
 	private final ICacheProvider cacheProvider;
-	private final RequestHandlingReporter reporter;
+	private final RequestReporter reporter;
 	private final Thread thread;
 	private boolean running;
+	private boolean waiting;
 	
 	@Inject
-	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider, RequestHandlingReporter reporter){
+	public UnifiedRequestHandler(ITaskDispatcher dispatcher, ICacheProvider cacheProvider, RequestReporter reporter){
 		this.dispatcher = dispatcher;
 		this.cacheProvider = cacheProvider;
 		this.reporter = reporter;
@@ -61,7 +60,9 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	@Override
 	public void stop() {
 		this.running = false;
-		this.thread.interrupt();
+		if(this.waiting){
+			this.thread.interrupt();
+		}
 	}
 	
 	@Override
@@ -73,16 +74,19 @@ public class UnifiedRequestHandler implements IRequestHandler {
 	public void run() {
 		try{
 			while(this.running){
+				this.waiting = true;
+				System.out.println("Wait Request");
 				Request request = this.dispatcher.getRequest();
+				this.waiting = false;
 				this.handleRequest(request);
 			}
 		}catch(Exception e){
-			if(!this.running && e instanceof InterruptedException){
-				LOGGER.log(Level.INFO, "Request Handler shutdown");
-			}else{
+			if(this.running){
 				LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			}
 		}
+		
+		LOGGER.log(Level.INFO, "Request Handler shutdown");
 	}
 	
 	private void handleNewRequest(Request request){

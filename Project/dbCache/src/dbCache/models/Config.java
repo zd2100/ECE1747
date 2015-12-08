@@ -12,4 +12,5 @@ public class Config {
 	public String dbConnection;
 	
 	public int cacheSize;
+	public double loadFactor;
 }

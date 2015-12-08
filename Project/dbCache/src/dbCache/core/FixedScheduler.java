@@ -1,4 +1,4 @@
-package dbCache.core.fixed;
+package dbCache.core;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -11,8 +11,8 @@ import com.google.inject.Injector;
 
 import dbCache.contract.IRequestHandler;
 import dbCache.contract.IScheduler;
-import dbCache.core.Statistics;
 import dbCache.models.Config;
+import dbCache.stats.Statistics;
 
 public class FixedScheduler implements IScheduler {
 	private static Logger LOGGER = Logger.getLogger(FixedScheduler.class.getName());
