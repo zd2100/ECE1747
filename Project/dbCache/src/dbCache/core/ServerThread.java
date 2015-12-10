@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import dbCache.contract.ITaskDispatcher;
 import dbCache.models.Config;
@@ -21,14 +22,16 @@ public class ServerThread implements Runnable{
 	private final ITaskDispatcher dispatcher;
 	private final Thread thread;
 	private final Statistics statistics;
+	private final SingleHandler single;
 	private boolean running;
 
 	@Inject
-	public ServerThread(Config config, ITaskDispatcher dispatcher, Statistics statistics){
+	public ServerThread(Config config, ITaskDispatcher dispatcher, Statistics statistics, SingleHandler single){
 		this.statistics = statistics;
 		this.dispatcher = dispatcher;
 		this.running = false;
 		this.thread = new Thread(this);
+		this.single = single;
 		
 		try{
 			this.serverSocket = new ServerSocket(config.port, config.backlog);
@@ -57,12 +60,10 @@ public class ServerThread implements Runnable{
 		try{
 			while(this.running){
 				Socket socket = this.serverSocket.accept();
-				
-	//			System.out.println("Connection Accepted");
-				
 				Request request = new Request(socket);
 				this.statistics.newRequestCount.incrementAndGet();
 				this.dispatcher.addRequest(request);
+	//	single.handleRequest(request);
 			}
 		}catch(Exception e){
 			if(!this.running && e instanceof InterruptedException){

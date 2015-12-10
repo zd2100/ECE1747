@@ -68,7 +68,7 @@ public class FixedScheduler extends TimerTask implements IScheduler {
 				IRequestHandler handler = this.injector.getInstance(IRequestHandler.class);
 				handler.start();
 				this.handlerPool.add(handler);
-				System.out.println("Starting handler");
+		//		System.out.println("Starting handler");
 			}
 		}
 	}

@@ -31,46 +31,38 @@ public class UnifiedTaskDispatcher implements ITaskDispatcher {
 		this.doneQueue = new LinkedBlockingQueue<Request>();
 	}
 	
-	public synchronized void addRequest(Request request){
+	public void addRequest(Request request){
 		try{
 			switch(request.state){
 			case New:
 				this.requestQueue.put(request);
-				this.statistics.requestQueueCount.incrementAndGet();
 				break;
 			case Executing:
 				this.executeQueue.put(request);
-				this.statistics.executeQueueCount.incrementAndGet();
 				break;
 			case Reply:
 				this.responseQueue.put(request);
-				this.statistics.replyQueueCount.incrementAndGet();
 				break;
 			case Done:
 				this.doneQueue.put(request);
-				this.statistics.doneQueueCount.incrementAndGet();
 				break;
 			default:
 				LOGGER.log(Level.SEVERE, "Unknown Status: " + request.state);
 				break;
 			}
+			this.updateStatistics();
+			
 		}catch(Exception e){
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 	
-	public synchronized Request getRequest() throws InterruptedException{
+	public Request getRequest() throws InterruptedException{
 		BlockingQueue<Request> queue = this.getMaxQueue();
+
 		Request request = queue.take();
-		if(queue == this.requestQueue){
-			this.statistics.requestQueueCount.decrementAndGet();
-		}else if(queue == this.executeQueue){
-			this.statistics.executeQueueCount.decrementAndGet();
-		}else if(queue == this.responseQueue){
-			this.statistics.replyQueueCount.decrementAndGet();
-		}else if(queue == this.doneQueue){
-			this.statistics.doneQueueCount.decrementAndGet();
-		}
+		
+		this.updateStatistics();
 		return request;
 	}
 	
@@ -86,5 +78,14 @@ public class UnifiedTaskDispatcher implements ITaskDispatcher {
 			max = this.doneQueue;
 		}
 		return max;
+	}
+	
+	private void updateStatistics(){
+		synchronized(this){
+			this.statistics.requestQueueCount.set(this.requestQueue.size());
+			this.statistics.executeQueueCount.set(this.executeQueue.size());
+			this.statistics.replyQueueCount.set(this.responseQueue.size());
+			this.statistics.doneQueueCount.set(this.doneQueue.size());
+		}
 	}
 }

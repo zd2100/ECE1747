@@ -69,6 +69,7 @@ public class CacheProvider implements ICacheProvider {
 		synchronized(this.waitingList){
 			if(this.waitingList.containsKey(key)){
 				request.waitListStartTime = System.currentTimeMillis();
+				this.statistics.waitListCount.incrementAndGet();
 				this.waitingList.get(key).add(request);
 		//		System.out.println("Add to waiting list: [" + request.hashCode() + "]");
 				return false;
@@ -94,9 +95,9 @@ public class CacheProvider implements ICacheProvider {
 				waitRequest.data = item.getData();
 				waitRequest.state = RequestStates.Reply;
 				this.statistics.delayedCacheHitCount.incrementAndGet();
+				this.statistics.waitListCount.decrementAndGet();
 				waitRequest.waitListEndTime = System.currentTimeMillis();
 				this.dispatcher.addRequest(waitRequest);
-		//		System.out.println("Waking up request: [" + request.hashCode() + "]");
 			}
 			
 			
@@ -132,7 +133,6 @@ public class CacheProvider implements ICacheProvider {
 					this.cacheOrder.add(item);
 					
 					this.statistics.cacheTurnoverCount.incrementAndGet();
-		//			System.out.println("Cache Turnover: [" + dropItem.key + "][" + dropItem.count.get() + "] => [" + item.key + "]");
 				}
 			}
 		}finally{

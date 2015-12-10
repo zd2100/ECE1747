@@ -27,7 +27,6 @@ public class ServerModule extends AbstractModule {
 	protected void configure() {
 		this.bind(ServerThread.class).in(Scopes.SINGLETON);
 		this.bind(Statistics.class).in(Scopes.SINGLETON);
-		this.bind(ICacheProvider.class).to(CacheProvider.class).in(Scopes.SINGLETON);
 		this.bind(IDataProvider.class).to(MySqlDataProvider.class).in(Scopes.SINGLETON);
 		this.bind(RequestReporter.class).in(Scopes.SINGLETON);
 		this.bind(ServerStatusReporter.class).in(Scopes.SINGLETON);

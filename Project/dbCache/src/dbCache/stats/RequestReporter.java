@@ -12,6 +12,7 @@ public class RequestReporter {
 	
 	public RequestReporter() throws IOException{
 		this.writer = new PrintWriter(new File(reportFile));
+		this.writer.println("Total,Process,Execute,WaitList,Reply");
 	}
 	
 	public synchronized void LogRequest(Request request){

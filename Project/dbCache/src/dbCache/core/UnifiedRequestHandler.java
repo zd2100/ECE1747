@@ -85,7 +85,8 @@ public class UnifiedRequestHandler implements IRequestHandler {
 				this.waiting = true;
 				request = this.dispatcher.getRequest();
 				this.waiting = false;
-			}catch(InterruptedException e){
+			}catch(Exception e){
+				LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			}finally{
 				if (request != null) this.handleRequest(request);
 			}
@@ -124,7 +125,6 @@ public class UnifiedRequestHandler implements IRequestHandler {
 		request.requestTerminateTime = System.currentTimeMillis();
 		this.statistics.doneRequestCount.incrementAndGet();
 		
-	//	System.out.println("Close Request: [" + request.hashCode() + "]");
 		this.reporter.LogRequest(request);
 	}
 }

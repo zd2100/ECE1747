@@ -44,7 +44,7 @@ public class DynamicScheduler extends TimerTask implements IScheduler {
 	@Override
 	public void start() {
 		this.running = true;
-		this.timer.scheduleAtFixedRate(this, 0, 5000);
+		this.timer.scheduleAtFixedRate(this, 0, 1000);
 	}
 
 	@Override
@@ -80,7 +80,6 @@ public class DynamicScheduler extends TimerTask implements IScheduler {
 				IRequestHandler handler = this.injector.getInstance(IRequestHandler.class);
 				handler.start();
 				this.handlerPool.add(handler);
-		//		System.out.println("Starting handler");
 			}
 		}else if(adjustment < 0){
 			// remove dead handlers
@@ -89,7 +88,6 @@ public class DynamicScheduler extends TimerTask implements IScheduler {
 			while(iterator.hasNext()){
 				IRequestHandler handler = iterator.next();
 				if(!handler.isRunning() || count < Math.abs(adjustment)){
-		//			System.out.println("Removing Handler");
 					handler.stop();
 					iterator.remove();
 					count++;
@@ -102,11 +100,13 @@ public class DynamicScheduler extends TimerTask implements IScheduler {
 	}
 	
 	private double calcRequestHandlerRatio(){
-		long requests = this.statistics.replyQueueCount.get() + 
-				this.statistics.executeQueueCount.get() + 
-				this.statistics.replyQueueCount.get() + 
-				this.statistics.doneQueueCount.get();
-		int handlers = Math.max(1, this.handlerPool.size());
-		return (double)requests / (double)handlers;
+		synchronized(this){
+			long requests = this.statistics.replyQueueCount.get() + 
+					this.statistics.executeQueueCount.get() + 
+					this.statistics.replyQueueCount.get() + 
+					this.statistics.doneQueueCount.get();
+			int handlers = Math.max(1, this.handlerPool.size());
+			return (double)requests / (double)handlers;
+		}
 	}
 }

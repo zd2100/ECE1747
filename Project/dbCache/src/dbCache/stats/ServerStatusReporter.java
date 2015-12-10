@@ -18,6 +18,8 @@ public class ServerStatusReporter extends TimerTask {
 		this.timer = new Timer();
 		try{
 			this.writer = new PrintWriter("server.csv");
+			this.writer.println("new,done,reqQ,exeQ,repQ,donQ,handler,fetch,hit,delayHit,turnover,waitList");
+			
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -45,7 +47,9 @@ public class ServerStatusReporter extends TimerTask {
 					this.statistics.cacheFetchCount.get() + "," +
 					this.statistics.cacheHitCount.get() + "," + 
 					this.statistics.delayedCacheHitCount.get() + "," + 
-					this.statistics.cacheTurnoverCount.get());
+					this.statistics.cacheTurnoverCount.get() + "," +
+					this.statistics.waitListCount.get());
+			
 			this.writer.flush();
 			this.statistics.newRequestCount.set(0);
 			this.statistics.doneRequestCount.set(0);
